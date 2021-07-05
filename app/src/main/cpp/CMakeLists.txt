@@ -40,10 +40,8 @@ set_target_properties( # Specifies the target library.
         PROPERTIES IMPORTED_LOCATION
 
         # Provides the path to the library you want to import.
-        #greio/src/${ANDROID_ABI}/libgreio.so
         ${libs}/${ANDROID_ABI}/libgreio.so
         )
-        #include_directories( greio/include/ )
 
 find_library( # Defines the name of the path variable that stores the
         # location of the NDK library.

@@ -1,3 +1,0 @@
-/home/rabiy/AndroidStudioProjects/test3/app/CMakeFiles/rebuild_cache.dir
-/home/rabiy/AndroidStudioProjects/test3/app/CMakeFiles/edit_cache.dir
-/home/rabiy/AndroidStudioProjects/test3/app/CMakeFiles/native-lib.dir

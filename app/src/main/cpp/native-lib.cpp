@@ -117,7 +117,7 @@ Java_com_example_test3_MainActivity_send_1system_1data(JNIEnv *env, jobject thiz
 	int 						ret;
 
 	// Connect to a channel to send messages (write)
-	send_handle = gre_io_open("dashboard0", GRE_IO_TYPE_WRONLY);
+	send_handle = gre_io_open("tcp://dashboard0", GRE_IO_TYPE_WRONLY);
 	if (send_handle == nullptr) {
 	    //FILE* file =fopen("error.txt","a");
 	    //fputs("test test",file);
