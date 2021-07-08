@@ -26,6 +26,11 @@ add_library( # Sets the name of the library.
              # Provides a relative path to your source file(s).
              native-lib.cpp )
 
+add_library(serial STATIC serial.cpp)
+add_library(serial_protocol STATIC serial_protocol.c)
+
+
+
 add_library( greio
 
              SHARED
@@ -43,19 +48,23 @@ set_target_properties( # Specifies the target library.
         ${libs}/${ANDROID_ABI}/libgreio.so
         )
 
-find_library( # Defines the name of the path variable that stores the
+
+find_library(log-lib log PATH ~/Android/Sdk/ndk/21.1.6352462/platforms/android-28/arch-arm/usr/lib/)
+
+#[[find_library( # Defines the name of the path variable that stores the
         # location of the NDK library.
         log-lib
 
         # Specifies the name of the NDK library that
         # CMake needs to locate.
-        lib-log )
+        lib-log )]]
+
+find_library(dl-lib dl )
 
 # Specifies a path to native header files.
 include_directories(include/)
 
-target_link_libraries( native-lib greio )
-#target_link_libraries( native-lib ${log-lib})
+target_link_libraries( native-lib serial_protocol serial greio ${log-lib} ${dl-lib})
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by

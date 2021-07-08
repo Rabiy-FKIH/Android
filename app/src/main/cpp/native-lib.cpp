@@ -1,11 +1,14 @@
 #include <jni.h>
 #include <android/log.h>
 #include <string>
-#include <stdio.h>
-#include <stdlib.h>
-#include <inttypes.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cinttypes>
+#include <cerrno>
+//#include <iostream>
 
-
+#include <thread>         // std::this_thread::sleep_for
+#include <chrono>
 
 #ifdef WIN32
 #include <windows.h>
@@ -16,6 +19,8 @@
 #include "greio.h"
 #include "dashboard0_events.h"
 
+#include "serial.h"
+#include "serial_protocol.h"
 
 #define MAX_SPEED 200
 #define MIN_SPEED 0
@@ -110,7 +115,7 @@ void sleep_ms(int milliseconds) {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_example_test3_MainActivity_send_1system_1data(JNIEnv *env, jobject thiz) {
+Java_com_example_test3_MainActivity_send_1system_1data(JNIEnv *env, jobject thiz, jint fd) {
 	gre_io_t					*send_handle;
 	gre_io_serialized_data_t	*nbuffer = NULL;
 	update_data_event_t			event_data;
@@ -126,15 +131,69 @@ Java_com_example_test3_MainActivity_send_1system_1data(JNIEnv *env, jobject thiz
         //LOGE("Can't open send channel\n");
 		return ;
 	}
+    /*memset(&event_data, 0, sizeof(event_data));
+    send_system_codes_initialize(send_handle);
+    sleep_ms(3000);
+    send_system_codes_startup(send_handle);*/
 
-	memset(&event_data, 0, sizeof(event_data));
-	send_system_codes_initialize(send_handle);
-	sleep_ms(3000);
-	send_system_codes_startup(send_handle);
+    uint8_t* load;
+    uint8_t* header;
+
+    serialFlush_I(fd);
+
+    //while (1) {
+        while (serialDataAvail (fd))
+        {
+            uint8_t buffer[sizeof(packet_decode)];
+            serial_decode(fd , buffer);
+
+            header=(uint8_t*) buffer;
+            load =(uint8_t*) (sizeof(serial_header) + buffer);
+
+            printf("{ Packet id : %d  ;  data length : %d  ;  Speed : %d  ;  RPM : %d  ;  Temperature : %d }\n",header[0],header[1],load[0],load[1],load[2]);
+            fflush (stdout) ;
+
+            printf("\n");
+
+            event_data.distance_traveled = 1000;
+            event_data.rpm = load[1];
+            event_data.fuel = 70;
+            event_data.speed = load[0];
+
+
+            // Serialize the data to a buffer
+            nbuffer = gre_io_serialize(nbuffer, NULL, UPDATE_DATA_EVENT, UPDATE_DATA_FMT, &event_data, sizeof(event_data));
+            if (!nbuffer) {
+                fprintf(stderr, "Can't serialized data to buffer, exiting\n");
+                break;
+            }
+
+            // Send the serialized event buffer
+            ret = gre_io_send(send_handle, nbuffer);
+            if (ret < 0) {
+                fprintf(stderr, "Send failed, exiting\n");
+                break;
+            }
+
+
+        }
+
+    //}
 
     //Release the buffer memory
     gre_io_free_buffer(nbuffer);
     //Close the send handle
     gre_io_close(send_handle);
 
+}extern "C"
+JNIEXPORT jint JNICALL
+Java_com_example_test3_MainActivity_serialOpen(JNIEnv *env, jobject thiz) {
+    int fd;
+
+    if ((fd = serialOpen ("/dev/ttyS1", 115200)) < 0)
+    {
+        fprintf(stderr, "Unable to open serial device:\n");
+        return -1;
+    }
+    return fd;
 }

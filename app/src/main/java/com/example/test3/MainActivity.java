@@ -24,13 +24,18 @@ public class MainActivity extends AppCompatActivity {
 
         //connect as a root
         try {
-            Process p = Runtime.getRuntime().exec("su");
+            Process p = Runtime.getRuntime().exec("su 0 chmod 777 /dev/ttyS1");
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         tv.setText(stringFromJNI());
-        send_system_data();
+
+        int fd = serialOpen();
+
+        //while (fd != -1) {
+            send_system_data(fd);
+        //}
 
     }
 
@@ -40,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public native String stringFromJNI();
     public native void sleep_ms(int milliseconds);
-    public native void send_system_data();
+    public native void send_system_data(int fd);
+    public native int serialOpen();
 
 }
